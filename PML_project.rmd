@@ -1,0 +1,36 @@
+---
+title: "PML project"
+author: "Danut Bancea"
+date: "Saturday, October 25, 2014"
+output: html_document
+---
+
+# Introduction
+
+   Using the data collected from a personal activity preditc which type of activity and exercise was completed. The type of execise is in the classe variable and all teh other can be used to predict teh activity.
+
+# Data source
+
+  The csv format file were downloaded from teh coursera website and saved in the git hub repository on local computer and also on the on the git hub web. There are two type of data:
+  pml-training.csv - which will be used for model creation and validation
+  pml-testing.csv - test data to generate the 20 test cases and 
+  
+  Web link for the csv data source files:
+     https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv 
+     https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+  
+  The original data came from the next link: http://groupware.les.inf.puc-rio.br/har
+
+
+# Data exploratory and cleaning
+
+## Data load
+
+
+
+# Data analysis
+
+# Data modeling
+
+# Conclusion
+
