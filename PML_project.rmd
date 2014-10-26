@@ -7,7 +7,7 @@ output: html_document
 
 # Introduction
 
-   Using the data collected from a personal activity preditc which type of activity and exercise was completed. The type of execise is in the classe variable and all teh other can be used to predict teh activity.
+   Using the data collected from a personal activity preditc which type of activity and exercise was completed. The type of execise is in the classe variable and all the other can be used to predict teh activity.
 
 # Data source
 
@@ -24,13 +24,133 @@ output: html_document
 
 # Data exploratory and cleaning
 
-## Data load
+## Load required libraries
 
+```{r}
+library(caret);
+library(randomForest);
+```
+
+## Data load
+   
+   Load the csv training file and explore the data
+```{r, cache=TRUE}
+setwd('D:\\cursuri\\PracticalMachineLearning\\Project\\pml');
+pml <- read.csv('pml-training.csv', na.strings=c("NA",""));
+pml_test <- read.csv('pml-testing.csv', na.strings=c("NA",""));
+```
+
+   Explore the data dimensions.
+   
+```{r}
+dim(pml);
+
+```
+
+   For the next processing part to find which variables are more usefull in modelling using correlation and PCA we need to exclude the columns which have NA values since. The requirement for correlation and PCA is to have all teh columns in numeric format.
+   
+```{r, cache=TRUE}
+pml <- pml[, colSums(is.na(pml)) == 0];
+dim(pml);
+```
+
+   We analyze again the new subset of data based on data type to find which columns will be deleted.
+   
+```{r}
+sapply(pml, class);
+```
+
+
+  Based on data output for data type we will delete the next columns from the data set: X, user_name, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp, new_window.
+  
+```{r, cache=TRUE}
+col_drop <- c('X','user_name', 'raw_timestamp_part_1', 'raw_timestamp_part_2', 'cvtd_timestamp', 'new_window');
+pml <- pml[, !(names(pml) %in% col_drop) ];
+dim(pml);
+```  
+## Data partition
+
+  We will partition the data in two sets: training which will have 80% of the training data set and validation with the remaining of 20% of the data.
+  
+```{r }
+in_train <- createDataPartition(pml$classe, p=0.80, list=FALSE);
+pml_train <- pml[in_train,];
+pml_valid <- pml[-in_train,];
+```
 
 
 # Data analysis
 
+  Since the data set has 54 variables and the a model calcualtion will take some time and in addition we would like to eliminate some noise from the data we need to reduce the number of variables before the data modelling. 
+  To find which columns can be deleted we will use two methods: correlationa and PCA (Principal Component nalysis).
+
+## Principal Components Analysis
+
+  we will process the data using the principal component analysis method with preProcess function from carret package. We will leave the default threshold at default value, 0.975. Since the output variable of the modelling process will be the "classe" column, column 160, we will leave out the column from the list of the variables in the PCA method.
+  
+```{r}
+col_ignore <- c('classe');
+preProc_PCA <- preProcess(pml_train[, !names(pml_train) %in% col_ignore], method="pca", tresh=0.99);
+pml_train_PCA <- predict(preProc_PCA, pml_train[, !names(pml_train) %in% col_ignore] );
+pml_valid_PCA <- predict(preProc_PCA, pml_valid[, !names(pml_train) %in% col_ignore] );
+```
+
 # Data modeling
 
+  For data modelling the random forest is used to calcualte the new data model.
+  
+```{r}
+pml_modelFit_PCA <- train(pml_train$classe ~ ., method="rf", data=pml_train_PCA);
+```
+
+   Calculate the confusion matrix and display the result.
+   
+```{r}
+pml_PCA_confusion <- confusionMatrix(pml_valid$classe, predict(pml_modelFit_PCA, pml_valid_PCA));
+pml_PCA_confusion;
+```
+
+   Display the importance of the PC variables in the
+   
+```{r}   
+varImpPlot(pml_modelFit_PCA$finalModel, sort=TRUE)
+```
+
 # Conclusion
+
+  
+
+# Predicted results and files generation
+
+  Delete the columns not used in prediction from the testing data set.
+  
+```{r, cache=TRUE}
+col_valid_name <- names(pml);
+pml_test <- pml_test[,names(pml_test) %in% col_valid_name];
+dim(pml_test);
+dim(pml);
+```
+
+  Use PCA to select the columns which will be used in testing prediction, predict the test values and display the predicted values.
+  
+```{r, cache=TRUE}
+col_ignore <- c('classe');
+pml_test_PCA <- predict(preProc_PCA, pml_test[, !names(pml_test) %in% col_ignore] );
+pred_test <- predict(pml_modelFit_PCA, newdata=pml_test_PCA);
+```
+
+   Generate the answer files for submission.
+   
+```{r, cache=TRUE}
+pml_write_files = function(x){
+     n = length(x)
+     for(i in 1:n){
+         filename = paste0("problem_id_",i,".txt")
+         write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+     }
+};
+pml_write_files(pred_test);
+```
+
+
 
