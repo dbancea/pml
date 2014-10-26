@@ -1,7 +1,7 @@
 ---
-title: "PML project"
+title: "Practical Machine Learning project - Coursera Data Science specialization"
 author: "Danut Bancea"
-date: "Saturday, October 25, 2014"
+date: "Saturday, October 26, 2014"
 output: html_document
 ---
 
@@ -49,7 +49,7 @@ dim(pml);
 
    For the next processing part to find which variables are more usefull in modelling using correlation and PCA we need to exclude the columns which have NA values since. The requirement for correlation and PCA is to have all teh columns in numeric format.
    
-```{r, cache=TRUE}
+```{r}
 pml <- pml[, colSums(is.na(pml)) == 0];
 dim(pml);
 ```
@@ -70,10 +70,10 @@ dim(pml);
 ```  
 ## Data partition
 
-  We will partition the data in two sets: training which will have 80% of the training data set and validation with the remaining of 20% of the data.
+  We will partition the data in two sets: training which will have 70% of the training data set and validation with the remaining of 30% of the data.
   
 ```{r }
-in_train <- createDataPartition(pml$classe, p=0.80, list=FALSE);
+in_train <- createDataPartition(pml$classe, p=0.70, list=FALSE);
 pml_train <- pml[in_train,];
 pml_valid <- pml[-in_train,];
 ```
@@ -86,11 +86,11 @@ pml_valid <- pml[-in_train,];
 
 ## Principal Components Analysis
 
-  we will process the data using the principal component analysis method with preProcess function from carret package. We will leave the default threshold at default value, 0.975. Since the output variable of the modelling process will be the "classe" column, column 160, we will leave out the column from the list of the variables in the PCA method.
+  we will process the data using the principal component analysis method with preProcess function from carret package. We will leave the default threshold at default value, 0.975. Since the output variable of the modelling process will be the "classe" column we will leave out the column from the list of the variables in the PCA method.
   
 ```{r}
 col_ignore <- c('classe');
-preProc_PCA <- preProcess(pml_train[, !names(pml_train) %in% col_ignore], method="pca", tresh=0.99);
+preProc_PCA <- preProcess(pml_train[, !names(pml_train) %in% col_ignore], method="pca", tresh=0.975);
 pml_train_PCA <- predict(preProc_PCA, pml_train[, !names(pml_train) %in% col_ignore] );
 pml_valid_PCA <- predict(preProc_PCA, pml_valid[, !names(pml_train) %in% col_ignore] );
 ```
@@ -98,7 +98,7 @@ pml_valid_PCA <- predict(preProc_PCA, pml_valid[, !names(pml_train) %in% col_ign
 # Data modeling
 
   For data modelling the random forest is used to calcualte the new data model.
-  
+   
 ```{r}
 pml_modelFit_PCA <- train(pml_train$classe ~ ., method="rf", data=pml_train_PCA);
 ```
@@ -118,6 +118,7 @@ varImpPlot(pml_modelFit_PCA$finalModel, sort=TRUE)
 
 # Conclusion
 
+  The variables selection and the modele selected, random forest, and with 70% training data and 30% validation data split, the fitted model have an accuracy of 97.8%. If more accuracy is required the initial selection of teh variables has to be different, and more data exploratory tests will berequired to find which varisbles and records can be kept to improve the accuracy.
   
 
 # Predicted results and files generation
